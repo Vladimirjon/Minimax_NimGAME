@@ -5,15 +5,15 @@ For playing Nim optimally.
 
 import copy
 
-def minimax(game, alpha=float('-inf'), beta=float('inf'), maximizing=True):
+def minimax(game, maximizing_player, alpha=float('-inf'), beta=float('inf')):
     """
     Implements the minimax algorithm with alpha-beta pruning.
     
     Args:
         game: Current game state (Nim object)
+        maximizing_player: The player we're trying to maximize for (0 or 1)
         alpha: Alpha value for pruning
         beta: Beta value for pruning
-        maximizing: True if maximizing player, False if minimizing
         
     Returns:
         Tuple (best_value, best_action)
@@ -21,14 +21,16 @@ def minimax(game, alpha=float('-inf'), beta=float('inf'), maximizing=True):
     # Base case: terminal state
     if game.is_terminal():
         winner = game.winner()
-        if winner == game.player:
-            return (1, None)  # Current player won
+        if winner == maximizing_player:
+            return (1, None)  # Maximizing player won
         else:
-            return (-1, None)  # Current player lost
+            return (-1, None)  # Maximizing player lost
     
     best_action = None
     
-    if maximizing:
+    # Check if it's the maximizing player's turn
+    if game.player == maximizing_player:
+        # Maximizing
         best_value = float('-inf')
         for action in game.available_actions():
             # Make a copy of the game to try this action
@@ -36,7 +38,7 @@ def minimax(game, alpha=float('-inf'), beta=float('inf'), maximizing=True):
             game_copy.move(action)
             
             # Recursively evaluate this action
-            value, _ = minimax(game_copy, alpha, beta, False)
+            value, _ = minimax(game_copy, maximizing_player, alpha, beta)
             
             if value > best_value:
                 best_value = value
@@ -46,6 +48,7 @@ def minimax(game, alpha=float('-inf'), beta=float('inf'), maximizing=True):
             if beta <= alpha:
                 break  # Beta cutoff
     else:
+        # Minimizing
         best_value = float('inf')
         for action in game.available_actions():
             # Make a copy of the game to try this action
@@ -53,7 +56,7 @@ def minimax(game, alpha=float('-inf'), beta=float('inf'), maximizing=True):
             game_copy.move(action)
             
             # Recursively evaluate this action
-            value, _ = minimax(game_copy, alpha, beta, True)
+            value, _ = minimax(game_copy, maximizing_player, alpha, beta)
             
             if value < best_value:
                 best_value = value
@@ -75,5 +78,5 @@ def get_best_move(game):
     Returns:
         Best action (pile, count) tuple
     """
-    _, best_action = minimax(game, maximizing=True)
+    _, best_action = minimax(game, game.player)
     return best_action

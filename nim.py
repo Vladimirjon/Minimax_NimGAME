@@ -11,13 +11,15 @@ class Nim:
     from a single pile. The player who takes the last object loses (misère version).
     """
     
-    def __init__(self, piles=[1, 3, 5, 7]):
+    def __init__(self, piles=None):
         """
         Initialize a Nim game with the given piles.
         
         Args:
             piles: List of integers representing the number of objects in each pile
         """
+        if piles is None:
+            piles = [1, 3, 5, 7]
         self.piles = piles.copy()
         self.player = 0  # 0 or 1
         

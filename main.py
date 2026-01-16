@@ -84,7 +84,7 @@ def main():
             if not initial_piles or any(p < 0 for p in initial_piles):
                 print("Invalid pile configuration. Using default.")
                 initial_piles = [1, 3, 5, 7]
-        except:
+        except (ValueError, TypeError):
             print("Invalid input. Using default pile configuration.")
             initial_piles = [1, 3, 5, 7]
     
