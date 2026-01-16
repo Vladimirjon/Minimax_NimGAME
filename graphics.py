@@ -52,6 +52,9 @@ class NimGraphics:
     PYRAMID_LEFT_X = 100
     ROW_SPACING = 80
     
+    # Timing
+    FPS = 60  # Target frames per second
+    
     def __init__(self):
         """Initialize the Pygame graphics system."""
         pygame.init()
@@ -262,9 +265,9 @@ class NimGraphics:
         self.message = ""
     
     def show_invalid_move_feedback(self):
-        """Show invalid move feedback for a short time."""
+        """Show invalid move feedback for a short time (approximately 1 second)."""
         self.show_invalid_move = True
-        self.invalid_move_timer = 60  # About 1 second at 60 FPS
+        self.invalid_move_timer = self.FPS  # Duration in frames (1 second at default FPS)
     
     def update_agent_stats(self, action: int, stats: MinimaxStats):
         """

@@ -61,7 +61,7 @@ def run_game_human_vs_agent():
         if game.current_player == NimGame.PLAYER_MAX:
             if not agent_thinking:
                 agent_thinking = True
-                think_delay = 30  # Short delay before agent moves (about 0.5 second)
+                think_delay = 30  # Delay in frames before agent moves (0.5 sec at 60 FPS)
             
             if think_delay > 0:
                 think_delay -= 1

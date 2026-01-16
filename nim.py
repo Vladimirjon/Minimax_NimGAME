@@ -164,13 +164,15 @@ def get_pyramid_representation(n_remaining: int) -> tuple:
     """
     Convert n_remaining to pyramid row counts for visualization.
     
-    The pyramid has rows of 3, 5, 7 sticks (bottom-up removal from right to left).
+    The pyramid has rows of 3, 5, 7 sticks (top to bottom).
+    When sticks are removed, they are taken from the bottom row first
+    (row3), then the middle row (row2), then the top row (row1).
     
     Args:
         n_remaining: Number of sticks remaining
         
     Returns:
-        Tuple of (row1_count, row2_count, row3_count) where row3 is bottom
+        Tuple of (row1_count, row2_count, row3_count) where row3 is the bottom row
     """
     if n_remaining <= 0:
         return (0, 0, 0)
