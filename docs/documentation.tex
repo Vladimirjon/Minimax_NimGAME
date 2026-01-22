@@ -1,0 +1,568 @@
+\documentclass[12pt,a4paper]{article}
+
+% ============================================
+% PAQUETES
+% ============================================
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{geometry}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{tikz}
+\usepackage{float}
+\usepackage{caption}
+
+% ============================================
+% CONFIGURACION
+% ============================================
+\geometry{margin=2.5cm}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,
+    urlcolor=cyan,
+    pdftitle={Juego de Nim Multi-Pila con Algoritmo Minimax},
+    pdfauthor={Proyecto Minimax}
+}
+
+% Estilo de codigo
+\lstdefinestyle{pythonstyle}{
+    language=Python,
+    basicstyle=\ttfamily\small,
+    keywordstyle=\color{blue}\bfseries,
+    stringstyle=\color{red},
+    commentstyle=\color{green!60!black},
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    stepnumber=1,
+    numbersep=8pt,
+    backgroundcolor=\color{gray!5},
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    frame=single,
+    rulecolor=\color{black},
+    tabsize=4,
+    captionpos=b,
+    breaklines=true,
+    breakatwhitespace=false,
+    escapeinside={(*@}{@*)}
+}
+\lstset{style=pythonstyle}
+
+% Teoremas y definiciones
+\theoremstyle{definition}
+\newtheorem{definicion}{Definicion}[section]
+\newtheorem{teorema}{Teorema}[section]
+\newtheorem{lema}{Lema}[section]
+\newtheorem{corolario}{Corolario}[section]
+
+% Encabezados
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\leftmark}
+\fancyhead[R]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% ============================================
+% DOCUMENTO
+% ============================================
+\begin{document}
+
+% ============================================
+% PORTADA
+% ============================================
+\begin{titlepage}
+    \centering
+    \vspace*{2cm}
+    
+    {\Huge\bfseries Juego de Nim Multi-Pila\par}
+    \vspace{0.5cm}
+    {\Huge\bfseries con Algoritmo Minimax\par}
+    \vspace{1cm}
+    {\Large Implementacion, Teoria Matematica y Resultados\par}
+    
+    \vspace{2cm}
+    
+    \begin{tikzpicture}
+        % Fila 1: 3 palitos
+        \foreach \x in {0,1,2} {
+            \draw[fill=brown!70, rounded corners=2pt] (\x*0.6 + 2.1, 2) rectangle (\x*0.6 + 2.25, 3.5);
+        }
+        % Fila 2: 5 palitos
+        \foreach \x in {0,1,2,3,4} {
+            \draw[fill=brown!70, rounded corners=2pt] (\x*0.6 + 1.5, 0) rectangle (\x*0.6 + 1.65, 1.5);
+        }
+        % Fila 3: 7 palitos
+        \foreach \x in {0,1,2,3,4,5,6} {
+            \draw[fill=brown!70, rounded corners=2pt] (\x*0.6 + 0.9, -2) rectangle (\x*0.6 + 1.05, -0.5);
+        }
+        % Etiquetas
+        \node at (5.5, 2.75) {\small Fila 1: 3 palitos};
+        \node at (5.5, 0.75) {\small Fila 2: 5 palitos};
+        \node at (5.5, -1.25) {\small Fila 3: 7 palitos};
+    \end{tikzpicture}
+    
+    \vspace{2cm}
+    
+    {\large\textbf{Contenido:}\par}
+    \vspace{0.5cm}
+    \begin{itemize}[leftmargin=3cm]
+        \item Teoria matematica del Nim multi-pila
+        \item Estrategia optima basada en Nim-sum (XOR)
+        \item Algoritmo Minimax con poda Alpha-Beta
+        \item Analisis de resultados experimentales
+    \end{itemize}
+    
+    \vfill
+    
+    {\large Version 2.0\par}
+    {\large \today\par}
+\end{titlepage}
+
+% ============================================
+% INDICE
+% ============================================
+\tableofcontents
+\newpage
+
+% ============================================
+% SECCION 1: INTRODUCCION
+% ============================================
+\section{Introduccion}
+
+El presente documento describe la implementacion de un agente inteligente para el juego de Nim con multiples pilas utilizando el algoritmo Minimax. El proyecto demuestra la aplicacion de la teoria de juegos combinatorios y tecnicas de inteligencia artificial en un juego de estrategia clasico.
+
+\subsection{Objetivos del Proyecto}
+
+Los objetivos principales del proyecto son:
+
+\begin{enumerate}
+    \item Implementar el juego de Nim con tres pilas y reglas de seleccion de fila.
+    \item Desarrollar un agente inteligente basado en el algoritmo Minimax.
+    \item Aplicar la estrategia matematica optima basada en Nim-sum.
+    \item Proporcionar una interfaz grafica interactiva con visualizacion 3D.
+    \item Analizar el rendimiento del agente mediante simulaciones.
+\end{enumerate}
+
+% ============================================
+% SECCION 2: EL JUEGO NIM MULTI-PILA
+% ============================================
+\section{El Juego Nim Multi-Pila}
+
+\subsection{Reglas del Juego}
+
+\begin{definicion}[Juego de Nim Multi-Pila]
+El juego de Nim con multiples pilas se define como sigue:
+\begin{itemize}
+    \item \textbf{Estado inicial:} Tres pilas con 3, 5 y 7 palitos respectivamente (total: 15).
+    \item \textbf{Jugadores:} Dos jugadores que alternan turnos.
+    \item \textbf{Movimientos validos:} En cada turno, el jugador debe:
+    \begin{enumerate}
+        \item Seleccionar una pila no vacia.
+        \item Remover de 1 a 3 palitos de esa pila.
+    \end{enumerate}
+    \item \textbf{Condicion de victoria:} El jugador que remueve el \textbf{ultimo palito gana}.
+\end{itemize}
+\end{definicion}
+
+\subsection{Representacion del Estado}
+
+El estado del juego se representa mediante una tupla de tres enteros:
+
+\begin{equation}
+    S = (n_1, n_2, n_3) \in \mathbb{Z}_{\geq 0}^3
+\end{equation}
+
+donde $n_i$ representa el numero de palitos en la pila $i$.
+
+El estado inicial es $S_0 = (3, 5, 7)$ y el estado terminal es $S_f = (0, 0, 0)$.
+
+\subsection{Estrategia Matematica: Nim-sum}
+
+La solucion matematica del juego de Nim fue descubierta por Charles L. Bouton en 1901. La estrategia se basa en el concepto de \textit{Nim-sum}, que es la operacion XOR (o exclusiva) aplicada a los tamanos de las pilas.
+
+\begin{definicion}[Nim-sum]
+Para un estado $S = (n_1, n_2, n_3)$, el Nim-sum se define como:
+\begin{equation}
+    \text{Nim-sum}(S) = n_1 \oplus n_2 \oplus n_3
+\end{equation}
+donde $\oplus$ denota la operacion XOR bit a bit.
+\end{definicion}
+
+\begin{teorema}[Estrategia Optima de Nim - Bouton, 1901]
+En el juego de Nim:
+\begin{enumerate}
+    \item Una posicion es \textbf{perdedora} (posicion P) si y solo si $\text{Nim-sum}(S) = 0$.
+    \item Una posicion es \textbf{ganadora} (posicion N) si y solo si $\text{Nim-sum}(S) \neq 0$.
+    \item Desde una posicion ganadora, siempre existe un movimiento que lleva a una posicion perdedora.
+\end{enumerate}
+\end{teorema}
+
+\begin{proof}
+La demostracion utiliza induccion sobre el numero total de palitos:
+
+\textbf{Caso base:} El estado $(0, 0, 0)$ tiene Nim-sum = 0 y es una posicion perdedora (el jugador anterior gano).
+
+\textbf{Paso inductivo:} 
+\begin{itemize}
+    \item Si $\text{Nim-sum}(S) = 0$, cualquier movimiento $m$ produce un estado $S'$ con $\text{Nim-sum}(S') \neq 0$. Esto se debe a que cambiar el valor de una sola pila necesariamente altera el XOR total.
+    
+    \item Si $\text{Nim-sum}(S) \neq 0$, sea $k$ el bit mas significativo de $\text{Nim-sum}(S)$. Existe al menos una pila $n_i$ que tiene el bit $k$ activo. Removiendo palitos de esta pila para que $n_i' = n_i \oplus \text{Nim-sum}(S)$, se obtiene $\text{Nim-sum}(S') = 0$.
+\end{itemize}
+\end{proof}
+
+\subsection{Calculo del Movimiento Optimo}
+
+\begin{algorithm}[H]
+\caption{Calculo del Movimiento Optimo en Nim}
+\begin{algorithmic}[1]
+\Function{MovimientoOptimo}{$n_1, n_2, n_3$}
+    \State $nimSum \gets n_1 \oplus n_2 \oplus n_3$
+    \If{$nimSum = 0$}
+        \State \Return \textit{null} \Comment{Posicion perdedora}
+    \EndIf
+    \For{$i \gets 1$ \textbf{to} $3$}
+        \State $objetivo \gets n_i \oplus nimSum$
+        \If{$objetivo < n_i$}
+            \State $remover \gets n_i - objetivo$
+            \If{$1 \leq remover \leq 3$}
+                \State \Return $(i, remover)$
+            \EndIf
+        \EndIf
+    \EndFor
+    \State \Return \textit{null}
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Ejemplo de Calculo}
+
+Para el estado inicial $(3, 5, 7)$:
+
+\begin{align}
+    3 &= 011_2 \\
+    5 &= 101_2 \\
+    7 &= 111_2 \\
+    \hline
+    \text{Nim-sum} &= 001_2 = 1
+\end{align}
+
+Como Nim-sum $\neq 0$, es una posicion ganadora. El movimiento optimo es remover 1 palito de la fila 1, dejando el estado $(2, 5, 7)$:
+
+\begin{align}
+    2 &= 010_2 \\
+    5 &= 101_2 \\
+    7 &= 111_2 \\
+    \hline
+    \text{Nim-sum} &= 000_2 = 0
+\end{align}
+
+Ahora el oponente esta en posicion perdedora.
+
+\subsection{Tabla de Posiciones}
+
+\begin{table}[H]
+\centering
+\caption{Ejemplos de posiciones ganadoras y perdedoras}
+\begin{tabular}{cccc}
+\toprule
+\textbf{Estado} & \textbf{Nim-sum} & \textbf{Tipo} & \textbf{Movimiento Optimo} \\
+\midrule
+(3, 5, 7) & 1 & Ganadora & Fila 1: quitar 1 \\
+(2, 5, 7) & 0 & Perdedora & -- \\
+(1, 1, 0) & 0 & Perdedora & -- \\
+(2, 2, 0) & 0 & Perdedora & -- \\
+(1, 2, 3) & 0 & Perdedora & -- \\
+(2, 3, 4) & 5 & Ganadora & Fila 3: quitar 1 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ============================================
+% SECCION 3: ALGORITMO MINIMAX
+% ============================================
+\section{Algoritmo Minimax}
+
+\subsection{Fundamentos}
+
+Aunque la estrategia de Nim-sum proporciona una solucion analitica optima, se implemento tambien el algoritmo Minimax para demostrar su aplicabilidad en juegos de suma cero.
+
+\begin{definicion}[Algoritmo Minimax]
+El algoritmo Minimax es una tecnica de busqueda adversarial que:
+\begin{itemize}
+    \item Construye un arbol de juego con todos los estados posibles.
+    \item Asigna valores a estados terminales (+1 victoria, -1 derrota).
+    \item Propaga valores hacia arriba: MAX elige maximo, MIN elige minimo.
+\end{itemize}
+\end{definicion}
+
+\subsection{Implementacion con Poda Alpha-Beta}
+
+\begin{algorithm}[H]
+\caption{Minimax con Poda Alpha-Beta}
+\begin{algorithmic}[1]
+\Function{MinimaxAB}{$estado$, $\alpha$, $\beta$, $esMax$}
+    \If{$esTerminal(estado)$}
+        \State \Return $evaluar(estado)$
+    \EndIf
+    
+    \If{$esMax$}
+        \State $valor \gets -\infty$
+        \For{cada $movimiento$ en $movimientosValidos(estado)$}
+            \State $hijo \gets aplicar(estado, movimiento)$
+            \State $valor \gets \max(valor,$ \Call{MinimaxAB}{$hijo$, $\alpha$, $\beta$, $false$}$)$
+            \State $\alpha \gets \max(\alpha, valor)$
+            \If{$\beta \leq \alpha$}
+                \State \textbf{break}
+            \EndIf
+        \EndFor
+        \State \Return $valor$
+    \Else
+        \State $valor \gets +\infty$
+        \For{cada $movimiento$ en $movimientosValidos(estado)$}
+            \State $hijo \gets aplicar(estado, movimiento)$
+            \State $valor \gets \min(valor,$ \Call{MinimaxAB}{$hijo$, $\alpha$, $\beta$, $true$}$)$
+            \State $\beta \gets \min(\beta, valor)$
+            \If{$\beta \leq \alpha$}
+                \State \textbf{break}
+            \EndIf
+        \EndFor
+        \State \Return $valor$
+    \EndIf
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Complejidad}
+
+Para el juego de Nim con estado inicial $(3, 5, 7)$:
+\begin{itemize}
+    \item Total de palitos: 15
+    \item Factor de ramificacion promedio: $\approx 7$ (movimientos validos)
+    \item Profundidad maxima: $\approx 8$ (movimientos para terminar)
+\end{itemize}
+
+La memoizacion reduce significativamente el espacio de busqueda al evitar reevaluar estados identicos alcanzados por diferentes caminos.
+
+% ============================================
+% SECCION 4: IMPLEMENTACION DEL AGENTE
+% ============================================
+\section{Implementacion del Agente}
+
+\subsection{Arquitectura del Sistema}
+
+El sistema se compone de los siguientes modulos:
+
+\begin{table}[H]
+\centering
+\caption{Modulos del sistema}
+\begin{tabular}{lp{8cm}}
+\toprule
+\textbf{Modulo} & \textbf{Descripcion} \\
+\midrule
+\texttt{nim.py} & Logica del juego multi-pila \\
+\texttt{minimax.py} & Algoritmo Minimax con Alpha-Beta \\
+\texttt{game\_agent.py} & Agente con niveles de dificultad \\
+\texttt{graphics.py} & Interfaz grafica PyQt6 \\
+\texttt{analysis.py} & Simulacion y generacion de graficas \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Niveles de Dificultad}
+
+El agente implementa cuatro niveles de dificultad:
+
+\begin{table}[H]
+\centering
+\caption{Configuracion de niveles de dificultad}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Nivel} & \textbf{Prob. Optimo} & \textbf{Descripcion} \\
+\midrule
+Facil & 20\% & Movimientos mayormente aleatorios \\
+Medio & 50\% & Balance entre optimo y aleatorio \\
+Dificil & 80\% & Casi siempre optimo \\
+Optimo & 100\% & Siempre usa estrategia Nim-sum \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+En el nivel \textbf{Optimo}, el agente utiliza directamente la estrategia de Nim-sum, garantizando un comportamiento deterministico y completamente predecible.
+
+\subsection{Proceso de Decision}
+
+\begin{enumerate}
+    \item Obtener el estado actual de las pilas.
+    \item Segun la dificultad, decidir si usar movimiento optimo.
+    \item Si es optimo: calcular Nim-sum y aplicar estrategia matematica.
+    \item Si no hay movimiento optimo valido (restriccion 1-3): usar Minimax.
+    \item Si es suboptimo: seleccionar movimiento aleatorio.
+\end{enumerate}
+
+% ============================================
+% SECCION 5: RESULTADOS
+% ============================================
+\section{Resultados Experimentales}
+
+\subsection{Metodologia}
+
+Los experimentos se realizaron bajo las siguientes condiciones:
+
+\begin{itemize}
+    \item \textbf{Configuracion:} Estado inicial $(3, 5, 7)$, maximo 3 palitos por movimiento.
+    \item \textbf{Simulaciones:} 100 partidas por nivel de dificultad.
+    \item \textbf{Oponente:} Agente aleatorio (seleccion uniforme de movimientos validos).
+    \item \textbf{Metrica principal:} Tasa de victoria del agente.
+\end{itemize}
+
+\subsection{Tasa de Victoria}
+
+\begin{figure}[H]
+\centering
+\fbox{\parbox{0.8\textwidth}{\centering
+\textit{[Grafica: win\_rates.png]}\\
+Tasa de victoria del agente por nivel de dificultad
+}}
+\caption{Tasa de victoria del agente contra oponente aleatorio}
+\label{fig:winrate}
+\end{figure}
+
+\subsection{Analisis de Resultados}
+
+Los resultados esperados son:
+
+\begin{itemize}
+    \item \textbf{Facil ($\sim$20\% optimo):} Tasa de victoria cercana al 60-70\%. Aunque juega mayormente aleatorio, ocasionalmente encuentra movimientos ganadores.
+    
+    \item \textbf{Medio ($\sim$50\% optimo):} Tasa de victoria del 80-90\%. El balance permite recuperarse de posiciones suboptimas.
+    
+    \item \textbf{Dificil ($\sim$80\% optimo):} Tasa de victoria superior al 90\%. Raramente comete errores.
+    
+    \item \textbf{Optimo (100\% optimo):} Tasa de victoria cercana al 90-95\%. Nota: El jugador humano/aleatorio comienza primero y $(3,5,7)$ tiene Nim-sum $\neq 0$, por lo que el primer jugador tiene ventaja teorica. El agente optimo gana cuando el oponente comete un error.
+\end{itemize}
+
+\subsection{Observacion Importante}
+
+En el estado inicial $(3, 5, 7)$, el Nim-sum es 1 (posicion ganadora). Por lo tanto:
+
+\begin{itemize}
+    \item El \textbf{primer jugador} (humano) tiene ventaja si juega optimamente.
+    \item Si el humano comete un error, el agente optimo lo capitaliza inmediatamente.
+    \item Un agente optimo que juega segundo ganara siempre que el oponente no juegue perfectamente.
+\end{itemize}
+
+% ============================================
+% SECCION 6: CONCLUSIONES
+% ============================================
+\section{Conclusiones}
+
+\subsection{Logros del Proyecto}
+
+\begin{enumerate}
+    \item Implementacion funcional del juego de Nim multi-pila con seleccion de fila.
+    \item Interfaz grafica atractiva con visualizacion 3D de palitos.
+    \item Agente inteligente que combina estrategia matematica (Nim-sum) con Minimax.
+    \item Sistema de dificultad graduada con comportamiento consistente.
+    \item Framework de analisis para evaluacion del rendimiento.
+\end{enumerate}
+
+\subsection{Observaciones Clave}
+
+\begin{enumerate}
+    \item La estrategia de Nim-sum proporciona la solucion optima sin necesidad de busqueda.
+    \item El Minimax sirve como respaldo cuando la restriccion de 1-3 palitos impide el movimiento optimo de Nim-sum.
+    \item El agente optimo tiene comportamiento completamente deterministico.
+    \item La posicion inicial favorece al primer jugador matematicamente.
+\end{enumerate}
+
+\subsection{Trabajo Futuro}
+
+\begin{itemize}
+    \item Configuracion personalizable del numero de pilas y palitos.
+    \item Modo misere (quien toma el ultimo palito pierde).
+    \item Analisis de arboles de juego completos.
+    \item Aprendizaje por refuerzo para ajuste dinamico.
+\end{itemize}
+
+% ============================================
+% APENDICES
+% ============================================
+\appendix
+
+\section{Instrucciones de Uso}
+
+\subsection{Instalacion}
+
+\begin{lstlisting}[language=bash]
+cd nim_minimax_project
+pip install -r requirements.txt
+\end{lstlisting}
+
+\subsection{Ejecucion}
+
+\begin{lstlisting}[language=bash]
+cd src
+python main.py      # Ejecutar juego
+python analysis.py  # Generar analisis
+\end{lstlisting}
+
+\section{Estructura del Repositorio}
+
+\begin{verbatim}
+nim_minimax_project/
+    src/
+        nim.py          # Logica multi-pila
+        minimax.py      # Algoritmo Minimax
+        game_agent.py   # Agente inteligente
+        graphics.py     # Interfaz PyQt6
+        analysis.py     # Simulacion
+        main.py         # Punto de entrada
+    docs/
+        documentation.tex
+    results/
+        win_rates.png
+        analysis_results.json
+    requirements.txt
+    README.md
+\end{verbatim}
+
+% ============================================
+% BIBLIOGRAFIA
+% ============================================
+\begin{thebibliography}{9}
+
+\bibitem{bouton1901}
+Bouton, C. L. (1901).
+\textit{Nim, A Game with a Complete Mathematical Theory}.
+Annals of Mathematics, 3(1/4), 35-39.
+
+\bibitem{russell2010}
+Russell, S., \& Norvig, P. (2010).
+\textit{Artificial Intelligence: A Modern Approach} (3rd ed.).
+Prentice Hall.
+
+\bibitem{sprague1935}
+Sprague, R. (1935).
+\textit{Uber mathematische Kampfspiele}.
+Tohoku Mathematical Journal, 41, 438-444.
+
+\bibitem{grundy1939}
+Grundy, P. M. (1939).
+\textit{Mathematics and Games}.
+Eureka, 2, 6-8.
+
+\end{thebibliography}
+
+\end{document}

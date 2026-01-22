@@ -1,161 +1,141 @@
-# Proyecto 3: Minimax Nim Game (Pyramid UI)
+# Nim Game - Minimax AI
 
-## Overview
+## Descripcion
 
-This project implements the Minimax decision-making algorithm for the game of Nim. A game agent (`NimGameAgent`) uses Minimax to choose optimal moves. A simple Pygame interface allows a human to play against the agent and visualize the agent’s decisions and performance metrics.
+Implementacion del juego de Nim con multiples pilas y un agente inteligente basado en el algoritmo Minimax. El juego incluye una interfaz grafica moderna con visualizacion 3D de los palitos.
 
-This repository contains:
+---
 
-* `minimax.py` — Minimax implementation (with memoization).
-* `gameAgent.py` — Agent wrapper that calls Minimax.
-* `nim.py` — Nim environment (rules, moves, victory conditions).
-* `graphics.py` — Pygame visualization shows a left-aligned pyramid.
-* `main.py` — Entry point and game loop.
-* `requirements.txt` — Dependencies.
+## Reglas del Juego
 
-## Game Rules (Fixed for this project)
+| Parametro             | Valor                           |
+| --------------------- | ------------------------------- |
+| Pilas iniciales       | Fila 1: 3, Fila 2: 5, Fila 3: 7 |
+| Movimientos por turno | 1, 2 o 3 palitos de una fila    |
+| Condicion de victoria | Tomar el ultimo palito          |
 
-We use a  **single-pile take-away Nim** :
+### Como Jugar
 
-1. Initial number of sticks:  **N = 15** .
-2. Two players alternate turns.
-3. On your turn you must remove **1, 2, or 3** sticks (cannot remove more than the remaining sticks).
-4. **Winning condition:** the player who takes the  **last stick wins** .
+1. Selecciona una fila haciendo clic en "Seleccionar"
+2. Elige cuantos palitos remover (1, 2 o 3)
+3. El jugador que toma el ultimo palito **gana**
 
-State definition:
+---
 
-* The game state is represented by one integer: `N_remaining`.
+## Estrategia Matematica
 
-Legal actions:
+La estrategia optima se basa en el **Nim-sum** (operacion XOR):
 
-* `k ∈ {1, 2, 3}` such that `k <= N_remaining`.
+```
+Nim-sum = Fila1 XOR Fila2 XOR Fila3
+```
 
-Terminal state:
+- Si Nim-sum = 0: Posicion perdedora
+- Si Nim-sum != 0: Posicion ganadora
 
-* `N_remaining == 0`.
+### Estado Inicial (3, 5, 7)
 
-Winner:
+```
+  3 = 011
+  5 = 101
+  7 = 111
+  ---------
+XOR = 001 = 1  (Posicion ganadora para quien mueve primero)
+```
 
-* The player who makes `N_remaining` become `0` is the winner.
+---
 
-## Visual Representation: Left-Aligned Pyramid (3, 5, 7)
+## Niveles de Dificultad
 
-Even though the game is  **single-pile** , the UI displays the 15 sticks as a left-aligned pyramid:
+| Nivel   | Probabilidad Optimo | Comportamiento       |
+| ------- | ------------------- | -------------------- |
+| Facil   | 20%                 | Mayormente aleatorio |
+| Medio   | 50%                 | Balance              |
+| Dificil | 80%                 | Casi siempre optimo  |
+| Optimo  | 100%                | Siempre usa Nim-sum  |
 
-* Row 1: 3 sticks
-* Row 2: 5 sticks
-* Row 3: 7 sticks
+---
 
-Important:
-
-* The pyramid is  **only a visualization** . The real game logic uses `N_remaining`.
-
-Removal visualization policy:
-
-* When a player removes sticks, the UI removes sticks from the  **bottom-most non-empty row** , from  **right to left** , so the pyramid remains visually consistent.
-
-Example:
-
-* Start: (3, 5, 7) = 15
-* Take 3: (3, 5, 4) = 12
-* Take 2: (3, 5, 2) = 10
-* Take 3: (3, 5, 0) = 8
-
-## Optimal Strategy (Mathematical Perspective)
-
-For the move set `{1,2,3}` with “last stick wins” (normal play):
-
-* **Losing positions** are when `N_remaining` is a multiple of 4:
-  * `N_remaining ≡ 0 (mod 4)`
-* **Winning strategy** is to always leave a multiple of 4 to the opponent.
-
-From any `N` that is not a multiple of 4, the optimal first move is:
-
-* `take = N % 4`
-
-For this project:
-
-* `15 % 4 = 3`
-* Optimal first move: **take 3** to leave  **12** .
-* After that, respond to the opponent’s move `x` by taking `4 - x` so the total removed in each pair of turns is 4, keeping the opponent on multiples of 4.
-
-Note:
-
-* The agent in this project does not hardcode this rule. It computes optimal play via Minimax. The rule above is included to explain the behavior you will observe.
-
-## Minimax (How it is applied here)
-
-Minimax is used for a two-player, deterministic, perfect-information game:
-
-* MAX player: the agent (by default).
-* MIN player: the human (or another agent in autoplay).
-
-Key components:
-
-* **Actions:** remove 1, 2, or 3 sticks.
-* **Transition:** `N_remaining -> N_remaining - k`.
-* **Terminal:** `N_remaining == 0`.
-* **Utility:** from MAX perspective:
-  * `+1` if MAX is the player who took the last stick,
-  * `-1` if MAX loses.
-
-Performance improvement:
-
-* **Memoization** caches results for `(N_remaining, player_to_move)` to avoid recalculating repeated subtrees.
-
-Collected stats per agent decision:
-
-* `nodes_evaluated`
-* `max_depth_reached`
-* `elapsed_time_ms`
-
-These are shown in the UI overlay and/or printed in the console.
-
-## Controls (Pygame)
-
-* Key `1`: remove 1 stick
-* Key `2`: remove 2 sticks
-* Key `3`: remove 3 sticks
-* Optional UI buttons may exist (New Game, Auto-Play), depending on implementation.
-
-Invalid moves are rejected (example: trying to remove 3 when only 2 remain).
-
-## How to Run
-
-### 1) Install dependencies
+## Instalacion
 
 ```bash
+cd nim_minimax_project
+
+# Crear entorno virtual (recomendado)
+python -m venv venv
+source venv/bin/activate  # Linux/Mac
+# venv\Scripts\activate   # Windows
+
+# Instalar dependencias
 pip install -r requirements.txt
 ```
 
-### 2) Run the game
+### Dependencias
+
+```
+PyQt6>=6.4.0
+numpy>=1.24.0
+matplotlib>=3.7.0
+```
+
+---
+
+## Uso
+
+### Ejecutar el Juego
 
 ```bash
+cd src
 python main.py
 ```
 
-## Optional: Autoplay (Agent vs Agent)
+## Estructura del Proyecto
 
-Autoplay mode is used for quick validation and efficiency evaluation. It can:
-
-* run multiple games,
-* print average decision time and average nodes evaluated.
-
-If implemented as a CLI flag, example:
-
-```bash
-python main.py --autoplay 20
+```
+nim_minimax_project/
+|
++-- src/
+|   +-- nim.py          # Logica del juego multi-pila
+|   +-- minimax.py      # Algoritmo Minimax con Alpha-Beta
+|   +-- game_agent.py   # Agente inteligente
+|   +-- graphics.py     # Interfaz PyQt6 con visualizacion 3D
+|   +-- main.py         # Punto de entrada
+|
++-- docs/
+|   +-- documentation.tex   # Documentacion LaTeX
+|
++-- requirements.txt
++-- README.md
 ```
 
-## Repository Expectations
+---
 
-* Clear module boundaries:
-  * `minimax.py` must not import Pygame.
-  * UI code stays in `graphics.py`.
-  * Game logic stays in `nim.py`.
-* Code should be readable and commented.
-* The agent should always play optimally for N=15 under the rules above.
+## Documentacion
 
-## License / Notes
+La documentacion completa en LaTeX (`docs/documentation.tex`) incluye:
 
-Academic project. Ensure your submission matches your instructor’s requirements and filenames exactly.
+1. Teoria matematica del Nim multi-pila
+2. Demostracion del teorema de Nim-sum
+3. Algoritmo Minimax con poda Alpha-Beta
+4. Analisis de resultados
+
+### Compilar Documentacion
+
+```bash
+cd docs
+pdflatex documentation.tex
+pdflatex documentation.tex  # Segunda pasada
+```
+
+---
+
+## Referencias
+
+1. Bouton, C. L. (1901). *Nim, A Game with a Complete Mathematical Theory*
+2. Russell, S., & Norvig, P. (2010). *Artificial Intelligence: A Modern Approach*
+
+---
+
+## Licencia
+
+Proyecto de uso academico.
